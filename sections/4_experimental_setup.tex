@@ -1,0 +1,102 @@
+\section{Experimental Setup}
+This section describes the experimental framework designed to evaluate the proposed multimodal information extraction and entity resolution system. The setup defines the evaluation objectives, the composition and construction of the evaluation datasets, the system configuration, the metrics used for assessment, and the statistical protocols employed to ensure reproducibility and rigor.
+
+\subsection{Evaluation Objectives}
+The experimental evaluation is structured around five primary objectives:
+(i) measuring the accuracy of the two-stage extraction pipeline across visual and acoustic modalities;
+(ii) assessing the effectiveness of the hybrid retrieval mechanism for product entity resolution;
+(iii) quantifying the end-to-end processing latency and operational cost; and
+(iv) isolating the contribution of individual architectural components through systematic ablation; and
+(v) establishing a taxonomy of failure modes (including transcription errors, LLM hallucinations, and retrieval collisions) to guide future operational refinements.
+Each objective is addressed by a dedicated experimental design, mapping specific datasets to targeted metrics to ensure comprehensive assessment.
+
+
+\subsection{Evaluation Datasets}
+To support comprehensive evaluation while preventing data leakage, four disjoint datasets are constructed. The retrieval index (enterprise catalog) is built independently from all evaluation instances, and strict dataset separation is enforced so that few-shot prompt examples are drawn exclusively from a held-out set that does not overlap with any test sample or the catalog.
+
+\subsubsection{Enterprise Micro Evaluation Set}
+This set comprises approximately 100 document images and 50 audio recordings, each manually verified and annotated with ground-truth entities. It is used exclusively for final end-to-end evaluation of the complete pipeline. The limited size reflects the high cost of manual annotation within enterprise constraints and ensures that this set remains a highly reliable proxy for real-world operational data.
+
+\subsubsection{Localized Public Dataset}
+To increase linguistic and structural diversity, we adapt 200 documents from the SROIE benchmark \parencite{huang2019icdar2019} and 150 documents from the CORD dataset \parencite{park2019cord}. All static receipt fields (e.g., ``Tax'', ``Total'') are translated into Vietnamese, and date formats are normalized to the local convention. This localization creates a cross-lingual testbed that challenges the extraction module while maintaining contextual and linguistic coherence for the language models.
+
+\subsubsection{V-DMS Synthetic Dataset}
+A larger synthetic corpus is generated to support ablation studies and component-wise analysis. It contains approximately 400 document images and 300 audio recordings, which are approximately balanced across document types and acoustic conditions, with automatically generated ground truth. The V-DMS dataset is stratified by document type (digital, scanned, handwritten) and audio conditions (clean, noisy) to enable fine-grained robustness analysis without exhausting the micro evaluation set.
+
+\subsubsection{Simulated Query Dataset}
+For isolated retrieval evaluation, we construct a set of exactly 2000 product queries. Each query is a textual product description sampled independently from the enterprise catalog, ensuring that no query duplicates the exact wording of catalog entries. This dataset is used strictly to compute recall and ranking metrics for the hybrid retrieval component.
+
+\subsection{Synthetic Data Generation Pipeline}
+To simulate variability in real operational document processing scenarios, two independent generation pipelines are implemented.
+
+\subsubsection{Document Rendering and Degradation}
+Document images are produced through a multi-stage pipeline. The process initiates with template selection, followed by layout randomization to alter spatial coordinates. Random sampling of field values from a predefined inventory is then applied, leading to the rendering of the document using configurable typographic properties. Finally, visual degradation operations---including rotation, blur, speckle noise, and contrast adjustment---are applied to simulate scanning artifacts and paper quality variations.
+
+\subsubsection{Audio Generation and Noise Injection}
+Acoustic samples are generated from textual purchase orders. To approximate real-world conditions, the pipeline first injects phonetic variations to mimic common Vietnamese pronunciation differences and transcription errors. Text-to-speech synthesis then generates the base waveforms. Subsequently, the pipeline applies additive background noise (e.g., office chatter, street sounds) at various signal-to-noise ratios (SNR), alongside convolutional distortions that simulate realistic microphone frequency responses.
+
+\subsection{System Configuration}
+The complete system is deployed on a local high-performance workstation running Debian GNU/Linux 12. The hardware environment is equipped with an Intel Core i9-12900 processor (24 logical cores), 16 GB of system memory, and an NVIDIA GeForce RTX 3090 Ti GPU (24 GB VRAM). Local GPU acceleration is strictly allocated for high-throughput dense embedding generation, while heavy generative language reasoning is offloaded to the Google Gemini API \parencite{team2023gemini}. Specifically, the Gemini 1.5 Flash and 2.0 Flash variants are utilized for high-throughput multimodal information extraction, whereas the more capable Gemini 1.5 Pro is reserved for complex semantic reasoning tasks such as hierarchical category prediction.
+
+The enterprise master catalog contains approximately 50,000 unique stock keeping units (SKUs), structured within a hierarchical taxonomy containing L1, L2, and L3 categories. To explicitly validate the scalability of the hybrid retrieval architecture, the evaluation index size is programmatically scaled across discrete thresholds (10k, 25k, and 50k SKUs). This scaling is achieved by dynamically appending (upserting) new vector embeddings to the existing Qdrant collection, which accurately simulates real-world enterprise catalog expansion without the overhead of full database re-indexing.
+
+The entity resolution module relies on a Qdrant vector database. The retrieval architecture combines dense and lexical search mechanisms; dense semantic embeddings are generated using a Vietnamese Sentence-BERT model \parencite{reimers2019sentence} (yielding 768-dimensional vectors compared via Cosine Similarity), while sparse lexical retrieval is driven by the BM25 probabilistic ranking function \parencite{robertson2009probabilistic}, computationally materialized as sparse vector dot products within the index. Hybrid search fuses the dense and sparse retrieval results utilizing Reciprocal Rank Fusion (RRF) \parencite{cormack2009reciprocal} with a constant smoothing parameter of $k=60$.
+
+Furthermore, modality routing within the system is deterministic and based solely on file extensions. Files with visual extensions (e.g., \texttt{.jpg}, \texttt{.png}) are directed to the image pipeline, while acoustic extensions (e.g., \texttt{.mp3}, \texttt{.wav}) are sent to the audio pipeline. This ensures predictable routing behavior without the computational overhead of an additional classification layer. Since routing is deterministic, classification accuracy is theoretically 100\% and is therefore excluded from empirical evaluation.
+
+\subsection{Evaluation Metrics and Mapping}
+The evaluation protocol employs a set of metrics tailored to each stage of the pipeline. Table~\ref{tab:eval_metrics} details the mapping between evaluation groups, system components, and their respective performance metrics.
+
+\begin{table}[htbp]
+    \centering
+    \caption{Mapping of Evaluation Stages to Performance Metrics}
+    \label{tab:eval_metrics}
+    \renewcommand{\arraystretch}{1.2}
+    \begin{tabular}{p{3.5cm} p{4.0cm} p{5.5cm}}
+        \hline
+        \textbf{Evaluation Group} & \textbf{System Component} & \textbf{Evaluation Metric} \\
+        \hline
+        Information Extraction
+            & OCR / ASR Transcription
+            & Character Error Rate (CER) / Word Error Rate (WER) \\
+            & LLM Entity Extraction
+            & Entity F1-Score \\
+        \hline
+        Entity Resolution
+            & Hybrid Product Retrieval
+            & Recall@5, Mean Reciprocal Rank (MRR) \\
+            & Merchant / Unit Mapping
+            & Exact Match Accuracy \\
+            & Category Prediction
+            & Top-1 / Top-3 Accuracy \\
+        \hline
+        System-Level Evaluation
+            & End-to-End Pipeline
+            & End-to-End Resolution Accuracy \\
+            & Human-in-the-loop Review
+            & Intervention Rate (\%) \\
+            & Operational Efficiency
+            & Latency (ms) \\
+            & Economic Viability
+            & Cost per 1,000 processed documents (USD) \\
+        \hline
+    \end{tabular}
+\end{table}
+
+The evaluation protocol is carefully aligned with the operational constraints of enterprise financial processing. Information Extraction is evaluated primarily using the Entity F1-score to balance false positives and false negatives, while Product Retrieval prioritizes Recall@K ($K=5$) to ensure the canonical entity is successfully surfaced. 
+
+Crucially, the End-to-End (E2E) Resolution Accuracy imposes a strict validation protocol. Due to the financial nature of invoices, partial matches or numerical deviations are treated as critical errors. An end-to-end extraction is considered strictly correct if and only if all core entities (Merchant, Product Name, and Quantity) exactly match the ground truth.
+
+The evaluation is modular and stage-specific; each component can be assessed in isolation using the appropriate input to isolate error sources, while end-to-end measurements reflect the integrated system behavior under realistic operating conditions. Additionally, the Human-in-the-loop Intervention Rate is quantified by calculating the percentage of predictions where the final hybrid retrieval score falls below a predefined operational confidence threshold, necessitating manual review. To ensure measurement consistency, processing latency is recorded under strictly controlled conditions: sequential single-thread execution (batch size of 1) and in a warm state (where all embedding models are pre-loaded in memory), thereby excluding cold-start initialization overhead. Crucially, the reported end-to-end latency comprehensively encompasses both local processing times (e.g., vector database retrieval) and the external network I/O overhead incurred by LLM API calls (including transmission delays and autoregressive generation times). Economic viability, specifically the operational cost per 1000 documents, is estimated directly from LLM token usage and applicable API pricing.
+
+\subsection{Comparison Strategies and Statistical Rigor}
+To contextualize the performance of the proposed architecture, we compare it against three alternative operational strategies:
+(i) a legacy rule-based system relying on regular expressions and fixed coordinate mappings;
+(ii) a modular pipeline that uses OCR followed by a generic language model without hybrid retrieval; and
+(iii) a monolithic multimodal architecture that processes all inputs through a vision-language model without initial transcription or dynamic routing.
+
+We deliberately exclude comparisons with specialized document understanding models such as LayoutLM \parencite{xu2020layoutlm} or Donut \parencite{kim2022ocr}. The focus of this study is the adaptability of an enterprise pipeline built on general-purpose, zero-shot components, where annotated training data is scarce and rapid integration is paramount. Such specialized models typically require extensive fine-tuning on task-specific bounding-box annotations, which contradicts the operational assumptions and minimal annotation requirements of our setting.
+
+The experimental design adheres to strict procedural rules. The Enterprise Micro dataset is reserved strictly for final end-to-end evaluation, whereas the synthetic datasets are allocated exclusively for component-level ablation experiments. Because probabilistic language models exhibit output variance, experiments involving LLM-based extraction are repeated multiple times. All quantitative results derived from these models are reported as the Mean $\pm$ Standard Deviation across at least three independent runs, an approach that accounts for generation variance and ensures statistical reliability.
+
+The quantitative results and detailed analysis are presented in Section~6.

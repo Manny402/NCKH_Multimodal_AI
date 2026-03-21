@@ -1,0 +1,156 @@
+\section{Methodology}
+
+\subsection{Problem Formulation}
+The objective of the proposed system is to perform multimodal information extraction (IE) and entity resolution (ER) within a domain-specific enterprise environment. The system processes heterogeneous business inputs consisting of visual and acoustic signals.
+
+Formally, let a multimodal input be defined as:
+\begin{equation}
+\mathcal{M} = (V, A)
+\end{equation}
+where $V$ denotes visual signals (e.g., scanned invoices or photographed receipts) and $A$ denotes acoustic signals (e.g., spoken purchase orders). Either modality may be absent depending on the input source.
+
+The overall processing framework is modeled as two composable mapping functions:
+\begin{equation}
+f_{IE}: \mathcal{M} \to \mathcal{E} \quad \text{and} \quad f_{ER}: \mathcal{E} \to \mathcal{D}
+\end{equation}
+where $f_{IE}$ denotes the information extraction function and $f_{ER}$ represents the entity resolution mapping. This composable formulation enables independent optimization of the IE and ER components, facilitating modular deployment and partial pipeline execution in complex enterprise workflows.
+
+The extraction stage produces a set of structured entities:
+\begin{equation}
+\mathcal{E} = \{e_1, e_2, \ldots, e_n\}
+\end{equation}
+aligning with standard information extraction ontologies to capture business attributes such as merchants, products, quantities, and measurement units. Subsequently, the entity resolution stage $f_{ER}$ maps each extracted entity $e \in \mathcal{E}$ to a canonical entry in an enterprise master database $\mathcal{D}$, ensuring compatibility with standardized enterprise data schemas.
+
+To operationalize this process, our methodology introduces three key components:
+\begin{enumerate}
+    \item a two-stage extraction architecture,
+    \item a hybrid dense–sparse entity retrieval framework, and
+    \item an optional taxonomy-guided search space reduction mechanism.
+\end{enumerate}
+
+\subsection{Design Rationale}
+The system architecture is motivated by three key observations derived from real-world enterprise document processing and Vietnamese linguistic characteristics.
+
+First, business documents exhibit substantial variability in visual quality, layout structure, and storage conditions. Traditional OCR-first pipelines exhibit degraded performance when documents contain irregular layouts or degraded visual artifacts. To address these challenges, the proposed architecture adopts a modality-aware transcription strategy in which perceptual interpretation is delegated to specialized OCR and ASR modules. The resulting textual representations are subsequently processed by a unified language model that performs structured semantic reasoning. This separation between signal transcription and semantic extraction improves robustness across heterogeneous input modalities while maintaining architectural modularity.
+
+Second, entity resolution within enterprise product catalogs requires both semantic similarity and precise lexical matching. Product identifiers frequently contain critical alphanumeric attributes such as wattage specifications or model numbers. Dense embeddings alone may struggle to preserve these exact lexical patterns, particularly for out-of-vocabulary tokens, product codes, or numeric identifiers, due to subword tokenization effects and vocabulary constraints \parencite{thakur2021beir, lin2022pretrained}. Enterprise product catalogs may contain tens of thousands of entries, introducing significant retrieval ambiguity.
+Therefore, we adopt a hybrid retrieval strategy combining dense semantic retrieval with sparse lexical retrieval. Additionally, for merchant name matching, we employ the Jaro–Winkler distance metric due to its emphasis on prefix similarity---a property empirically suitable for Vietnamese enterprise naming conventions, where the most discriminative information typically resides at the beginning of the entity name \parencite{nguyen2021phonlp}.
+
+Third, large product catalogs introduce significant search ambiguity. To mitigate cross-category semantic collisions, the system employs an optional taxonomy-guided retrieval filter. This mechanism is strategically invoked when the target catalog size exceeds predefined thresholds or for product categories exhibiting high semantic ambiguity, thereby constraining the candidate search space effectively.
+
+\subsection{System Overview}
+The overall architecture of the proposed system is illustrated in Figure~\ref{fig:architecture}. The framework is designed with horizontal scalability in mind to support enterprise-scale document processing workloads. It functions as a modular architecture that maintains clear logical boundaries. A deterministic modality router directs inputs to the appropriate visual or acoustic processing pipeline based on file type metadata.
+
+As illustrated in Figure~\ref{fig:architecture}, batch inputs undergo signal triage (Layers 1--2), are routed to modality-specific pipelines (Layers 3--4), converge at the LLM-based extraction stage (Layers 5--6), and finally pass through the entity resolution module (Layer 7) before canonical integration (Layer 8).
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    box/.style={draw, rectangle, rounded corners, align=center,
+                minimum width=3.4cm, minimum height=0.9cm, font=\small},
+    smallbox/.style={draw, rectangle, rounded corners, align=center,
+                     minimum width=3.0cm, minimum height=0.75cm, font=\footnotesize},
+    erbox/.style={draw, rectangle, rounded corners, align=center,
+                  minimum width=6.5cm, minimum height=1.5cm, font=\footnotesize},
+    arrow/.style={-Latex, thick},
+    dashedarrow/.style={-Latex, thick, dashed}
+]
+
+% ====================== LAYER 1 & 2: INPUT & ROUTING ======================
+\node[box] (upload)  at (0, 0)    {Layer 1: Batch Ingestion};
+\node[box] (router) at (0, -1.5)  {Layer 2: \textbf{Modality Router}};
+
+% ====================== LAYER 3: MODALITY PIPELINES ======================
+\node[box] (imgpipe)   at (-4.0, -3.2) {Layer 3: Visual Pipeline};
+\node[box] (audiopipe) at ( 4.0, -3.2) {Layer 3: Acoustic Pipeline};
+
+% ====================== LAYER 4: TRANSCRIPTION ======================
+\node[smallbox] (ocr)   at (-4.0, -4.8) {Layer 4: OCR Transcription};
+\node[smallbox] (asr)   at ( 4.0, -4.8) {Layer 4: ASR Transcription};
+
+% ====================== LAYER 5 & 6: EXTRACTION ======================
+\node[box, minimum width=7.5cm] (llm) at (0, -6.5)
+    {Layer 5: LLM-based Entity Extraction ($f_{IE}$)};
+\node[box] (json) at (0, -8.0)
+    {Layer 6: Unified Structured Entities $\mathcal{E}$};
+
+% ====================== LAYER 7: ENTITY RESOLUTION ======================
+% \node[erbox, minimum width=8cm] (er) at (0, -10.2)
+%     {Layer 7: \textbf{Entity Resolution Framework ($f_{ER}$)}\\[4pt]
+%      Merchant: Jaro-Winkler $\rightarrow$ Product: Hybrid Vector $\rightarrow$ Unit: Ontology\\[2pt]
+%      \textit{[Optional]} Taxonomy-Guided Category Filter};
+\node[erbox, minimum width=8cm] (er) at (0, -10.2)
+    {Layer 7: \textbf{Entity Resolution Framework ($f_{ER}$)}\\[4pt]
+     Merchant: Jaro-Winkler $\rightarrow$ Product: Hybrid Vector $\rightarrow$ Unit: Ontology\\[2pt]
+     (Optional) Taxonomy-Guided Category Filter};
+
+
+% ====================== HUMAN IN THE LOOP ======================
+\node[smallbox, text width=2.5cm, right=1.8cm of er] (hitl) {Top-$K$\\Human Review};
+
+% ====================== LAYER 8: OUTPUT ======================
+\node[box] (output) at (0, -12.5)
+    {Layer 8: Canonical Database\\Integration $\mathcal{D}$};
+
+% ====================== ARROWS ======================
+\draw[arrow] (upload)  -- (router);
+\draw[arrow] (router) -| node[pos=0.25, above, font=\scriptsize] {Visual} (imgpipe);
+\draw[arrow] (router) -| node[pos=0.25, above, font=\scriptsize] {Acoustic} (audiopipe);
+\draw[arrow] (imgpipe) -- (ocr);
+\draw[arrow] (audiopipe) -- (asr);
+\draw[arrow] (ocr) |- (llm);
+\draw[arrow] (asr) |- (llm);
+\draw[arrow] (llm) -- (json);
+\draw[arrow] (json) -- (er);
+\draw[arrow] (er) -- (output);
+
+% Dashed arrow for Human-in-the-loop
+\draw[dashedarrow] (er.east) -- node[above, font=\scriptsize] {Low Conf.} (hitl.west);
+\draw[dashedarrow] (hitl.south) |- (output.east);
+
+% ====================== ANNOTATIONS ======================
+\node[font=\scriptsize, gray, rotate=90, anchor=south] at (-6.2, -1.5) {Signal Triage};
+\node[font=\scriptsize, gray, rotate=90, anchor=south] at (-6.2, -5.6) {Two-Stage Extraction};
+\node[font=\scriptsize, gray, rotate=90, anchor=south] at (-6.2, -10.2) {Entity Resolution};
+
+\end{tikzpicture}
+\caption{System architecture of the proposed multimodal information extraction and entity resolution framework. The pipeline performs signal triage, modality-aware transcription, LLM-based entity extraction, and hybrid entity resolution (with optional operational human review) for canonical database integration.}
+\label{fig:architecture}
+\end{figure}
+
+\FloatBarrier
+
+\subsection{Two-Stage Multimodal Extraction}
+The system decomposes the information extraction process into a two-stage abstraction, separating signal interpretation from downstream semantic extraction.
+
+\subsubsection{Stage 1: Modality Transcription}
+In the initial stage, raw signals are converted into textual representations using modality-specific transcription modules, specifically a cloud-based OCR service with document layout analysis capabilities and a Transformer-based Vietnamese ASR model (Whisper-based) \parencite{radford2023robust, le2024phowhisper}. The fundamental purpose of this stage is to normalize highly variable, modality-dependent inputs into a common textual reasoning interface. By delegating perceptual interpretation to specialized transcription modules, the architecture isolates modality-specific noise from downstream extraction logic.
+
+\subsubsection{Stage 2: LLM-Based Entity Extraction}
+Following initial transcription, a generative language model performs structured information extraction. Operating exclusively over the transcribed text, the language model applies domain-specific reasoning to identify, disambiguate, and extract critical business attributes. This conceptual separation ensures that the semantic reasoning engine operates independently of the original signal modality. The language model formats the extracted entities from all pipelines into a unified structured JSON schema, constructing a standardized, modality-agnostic foundation for the subsequent entity resolution stage.
+
+\subsection{Hybrid Entity Resolution}
+The extracted entity surface forms must be deterministically linked to canonical identifiers within the enterprise catalog. To achieve this objective, the system employs a cascading entity resolution framework.
+
+\subsubsection{Merchant Matching via Lexical Similarity}
+Merchant entities are resolved using the Jaro–Winkler string similarity metric \parencite{winkler1990string} against a predefined merchant registry, utilizing an empirical similarity threshold of 0.85. Prior to matching, entity strings are normalized using a deterministic abbreviation dictionary that standardizes common enterprise naming variations.
+
+\subsubsection{Product Search via Hybrid Retrieval}
+Product matching is formulated as a hybrid retrieval problem executed via parallel querying within the Qdrant vector database. Dense semantic similarity is computed using a Vietnamese Sentence-BERT model \parencite{reimers2019sentence} (\texttt{keepitreal/vietnamese-sbert}, originally fine-tuned on a PhoBERT backbone \parencite{nguyen2020phobert}), generating 768-dimensional embeddings to capture conceptual relationships between product descriptions. In parallel, sparse lexical retrieval is managed via Qdrant's natively integrated BM25 sparse vector component \parencite{robertson2009probabilistic} to preserve exact matches of critical alphanumeric identifiers. 
+
+During execution, each independent retrieval stream (dense and sparse) asynchronously fetches the top-100 candidate entities. To reconcile these fundamentally different vector spaces, we employ Reciprocal Rank Fusion (RRF) \parencite{cormack2009reciprocal}:
+
+\begin{equation}
+\text{RRF}(d) = \sum_{m \in M} \frac{1}{k + r_m(d)}
+\end{equation}
+where $d$ is the candidate document, and 
+$M = \{\text{dense}, \text{sparse}\}$ denotes the set of retrieval methods, $r_m(d)$ is the 1-indexed rank of document $d$ produced by retrieval method $m$ (capped at the top-100 retrieval pool), and $k$ is a smoothing constant (set to $60$ following standard IR practice). RRF serves as the primary fusion strategy due to its recognized robustness and mathematical simplicity, fusing disparate scoring scales without requiring extensive training data to calibrate parameter weights.
+
+\subsubsection{Category-Guided Retrieval}
+To further reduce semantic ambiguity during product retrieval, the system introduces optional category-guided filtering. Prior to vector retrieval, an LLM predicts hierarchical product taxonomy labels (L1/L2/L3 categories). The filter is implemented as a logical \texttt{must} condition over the catalog category metadata within the vector index, which significantly curtails the risk of cross-category semantic collisions. Furthermore, to maintain strict enterprise data governance, the system implements a human-in-the-loop fallback mechanism. We empirically define the operational confidence threshold at $\tau = 0.015$. Based on the mathematical properties of the Reciprocal Rank Fusion (with $k=60$), this precise threshold ensures that a candidate must be ranked within the top-6 by at least one independent retrieval stream to bypass manual verification. When the final hybrid retrieval score of the top candidate falls below this $\tau$ value, the top-$K$ retrieved entities are forwarded for human review before final reintegration into the canonical output database $\mathcal{D}$.
+
+\subsection{Prompt Design and Ethical Considerations}
+The performance of the generative extraction models relies heavily on structured prompt engineering. To ensure reproducibility and mitigate hallucination risks, each prompt systematically consists of four components: (1) a system instruction defining the extraction task and role, (2) context injection for domain knowledge (e.g., explicit phonetic mapping rules to correct known ASR variations like ``xê hát'' $\rightarrow$ ``CH'' for ``cửa hàng''), (3) a small number of few-shot extraction examples, and (4) strict output formatting constraints. This strict prompt structure constrains the model to extract only factually present information, allowing the probabilistic outputs of the LLM to safely interface with deterministic downstream logic.
+Furthermore, to ensure reproducibility while accommodating the noisy nature of multimodal inputs, the system employs an adaptive temperature routing strategy. Inference temperature is explicitly set to $T=0.1$ for deterministic hierarchical category prediction, ensuring strict adherence to the enterprise taxonomy. Conversely, multimodal extraction tasks utilize a temperature of $T=0.2$ (or default API settings for specific modular endpoints). This slight relaxation provides the LLM with sufficient generative flexibility to semantically correct severe perceptual OCR and ASR transcription errors (e.g., phonetic misspellings or layout artifacts) while adhering to the JSON schema constraints.
+
+Finally, because enterprise invoices inherently contain sensitive financial information, the methodology assumes deployment within secure, access-controlled enterprise environments where appropriate data protection policies are enforced.

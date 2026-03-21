@@ -1,0 +1,22 @@
+# LaTeX build files
+*.aux
+*.bbl
+*.bcf
+*.blg
+*.log
+*.out
+*.run.xml
+*.synctex.gz
+*.toc
+*.fls
+*.fdb_latexmk
+*.lof
+*.lot
+
+# Editor settings
+.vscode/
+.idea/
+
+# OS specific
+.DS_Store
+Thumbs.db

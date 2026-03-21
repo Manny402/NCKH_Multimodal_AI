@@ -1,0 +1,189 @@
+\documentclass[12pt, a4paper]{article}
+
+% ==========================================
+% LANGUAGE & FONT
+% ==========================================
+\usepackage{fontspec}
+\setmainfont{Times New Roman}
+\usepackage[english]{babel}
+\usepackage{csquotes}           % Required by biblatex with babel
+
+% ==========================================
+% PAGE LAYOUT
+% Left 3cm, Right 2cm, Top 2cm, Bottom 2cm
+% ==========================================
+\usepackage[top=2cm, bottom=2cm, left=3cm, right=2cm]{geometry}
+
+% ==========================================
+% LINE SPACING
+% ==========================================
+\usepackage{setspace}
+\onehalfspacing
+
+% ==========================================
+% FIGURES & TABLES
+% ==========================================
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{float}
+\usepackage{tabularx}
+
+% ==========================================
+% MATH
+% ==========================================
+\usepackage{amsmath, amssymb}
+
+% ==========================================
+% PLOTS & COLORS
+% ==========================================
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usepackage{xcolor}
+
+% ==========================================
+% TABLE OF CONTENTS STYLING
+% ==========================================
+\usepackage{tocloft}            % TOC formatting control
+\usepackage{titlesec}           % Section title formatting
+
+% TOC title style
+\renewcommand{\cfttoctitlefont}{\large\bfseries}
+\renewcommand{\cftaftertoctitle}{\\\rule{\linewidth}{0.4pt}}
+\setlength{\cftbeforetoctitleskip}{0pt}
+\setlength{\cftaftertoctitleskip}{12pt}
+
+% Section entries in TOC — bold
+\renewcommand{\cftsecfont}{\bfseries}
+\renewcommand{\cftsecpagefont}{\bfseries}
+\renewcommand{\cftsecleader}{\cftdotfill{\cftdotsep}}
+\setlength{\cftsecindent}{0pt}
+\setlength{\cftsecnumwidth}{2em}
+\setlength{\cftbeforesecskip}{6pt}
+
+% Subsection entries in TOC
+\renewcommand{\cftsubsecfont}{\normalfont}
+\renewcommand{\cftsubsecpagefont}{\normalfont}
+\setlength{\cftsubsecindent}{2em}
+\setlength{\cftsubsecnumwidth}{2.8em}
+\setlength{\cftbeforesubsecskip}{2pt}
+
+% Subsubsection entries in TOC
+\setlength{\cftsubsubsecindent}{4.5em}
+\setlength{\cftsubsubsecnumwidth}{3.5em}
+
+% Section title formatting in document body
+\titleformat{\section}
+  {\normalfont\fontsize{13}{15}\bfseries}{\thesection}{1em}{}
+\titleformat{\subsection}
+  {\normalfont\fontsize{12}{14}\bfseries}{\thesubsection}{1em}{}
+\titleformat{\subsubsection}
+  {\normalfont\fontsize{12}{14}\itshape}{\thesubsubsection}{1em}{}
+
+% ==========================================
+% MISCELLANEOUS
+% ==========================================
+\usepackage{url}
+\usepackage{microtype}          % Improved text justification
+\usepackage{parskip}            % Space between paragraphs
+
+% ==========================================
+% REFERENCE MANAGEMENT (APA)
+% Must be loaded before hyperref
+% ==========================================
+\usepackage[backend=biber, style=apa, sorting=nyt]{biblatex}
+\addbibresource{references.bib}
+
+% ==========================================
+% HYPERREF — always load LAST
+% ==========================================
+\usepackage[
+  colorlinks=true,
+  linkcolor=black,
+  citecolor=blue,
+  urlcolor=blue,
+  bookmarks=true,
+  pdfusetitle
+]{hyperref}
+
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows.meta, positioning, fit}
+\usepackage{placeins}
+
+% ==========================================
+% RESEARCH PAPER INFORMATION
+% ==========================================
+\title{
+  \textbf{Multimodal A.I: \\
+  A Revolution for Enterprise Digital Transformation in Vietnam}
+}
+
+\author{
+  Nguyễn Đại Quân\texorpdfstring{\textsuperscript{1}}{[1]},
+  Nguyễn Phú Nam \texorpdfstring{\textsuperscript{2}}{[2]},
+  Trương Hoàng Tùng \texorpdfstring{\textsuperscript{3}}{[3]}
+  Nguyễn Dương Hiếu \texorpdfstring{\textsuperscript{4}}{[4]} \\[6pt]
+  \small\textit{\texorpdfstring{\textsuperscript{1}}{[1]}Mathematical Economics, National Economics University} \\
+}
+\date{\today}
+
+% ==========================================
+% MAIN BODY
+% ==========================================
+\begin{document}
+
+\maketitle
+
+% ==========================================
+% ABSTRACT
+% ==========================================
+\begin{abstract}
+\noindent
+Digital transformation in enterprises has accelerated the adoption of Cognitive Robotic Process Automation (RPA) capable of processing unstructured and multimodal inputs such as documents, images, and speech. However, deploying end-to-end Large Language Models (LLMs) in high-frequency enterprise workflows introduces significant challenges related to prediction accuracy, computational latency, and operational cost.
+This study proposes a modular two-stage framework for multimodal information extraction and entity resolution designed for domain-specific enterprise environments. The architecture separates signal interpretation from semantic reasoning. In the first stage, specialized perception modules—including Optical Character Recognition (OCR) and Automatic Speech Recognition (ASR)—convert multimodal inputs into textual representations. In the second stage, a unified Large Language Model performs zero-shot structured entity extraction from the transcribed content.
+To resolve extracted entities against large enterprise catalogs, the system employs a hybrid retrieval mechanism that combines dense semantic representations from Sentence-BERT with sparse lexical matching using BM25. The two retrieval signals are integrated through Reciprocal Rank Fusion (RRF) to improve robustness and recall.
+Experimental evaluation demonstrates that the proposed system achieves high extraction performance with F1-scores of 0.91 for visual inputs and 0.85 for acoustic inputs under noisy conditions. The hybrid retrieval module maintains a Recall@5 of 0.93 on a catalog containing 50,000 stock-keeping units (SKUs). In addition, the architecture achieves an estimated operational cost of \$13.50 per 1,000 processed documents while limiting the human-in-the-loop intervention rate to 12.5%.
+These results indicate that the proposed modular architecture provides an efficient and scalable approach for integrating noisy multimodal inputs into structured enterprise data pipelines.
+
+
+\medskip
+\noindent\textbf{Keywords}: Multimodal Information Extraction, Robotic Process Automation, Large Language Models, Hybrid Retrieval, Entity Resolution, Enterprise Automation.
+
+\medskip
+\noindent\textbf{JEL Classification:} O33, L86, M15
+\end{abstract}
+
+\newpage
+
+% ==========================================
+% TABLE OF CONTENTS (clickable via hyperref)
+% ==========================================
+{
+  \hypersetup{linkcolor=black}   % TOC links in black (professional look)
+  \setcounter{tocdepth}{3}       % Show: section / subsection / subsubsection
+  \tableofcontents
+}
+
+\newpage
+
+% ==========================================
+% SECTION FILES
+% ==========================================
+
+\input{sections/1_introduction}
+\input{sections/2_literature_review}
+\input{sections/3_methodology}
+\input{sections/4_experimental_setup}
+\input{sections/5_results} 
+\input{sections/6_conclusion}
+
+% ==========================================
+% REFERENCES
+% ==========================================
+\newpage
+\nocite{*}
+\printbibliography[heading=bibintoc, title={References}]
+
+\end{document}
