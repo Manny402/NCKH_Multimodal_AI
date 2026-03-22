@@ -12,7 +12,23 @@
 % PAGE LAYOUT
 % Left 3cm, Right 2cm, Top 2cm, Bottom 2cm
 % ==========================================
-\usepackage[top=2cm, bottom=2cm, left=3cm, right=2cm]{geometry}
+\usepackage[top=2cm, bottom=2cm, left=3cm, right=2cm, headheight=15pt]{geometry}
+
+% ==========================================
+% HEADER & FOOTER
+% ==========================================
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{} % Clear default header and footer
+\fancyhead[C]{\thepage} % Set page number at top center
+\renewcommand{\headrulewidth}{0pt} % Remove header line
+
+% Redefine plain style so that title pages also have the same header
+\fancypagestyle{plain}{
+  \fancyhf{}
+  \fancyhead[C]{\thepage}
+  \renewcommand{\headrulewidth}{0pt}
+}
 
 % ==========================================
 % LINE SPACING
@@ -174,6 +190,7 @@ These results indicate that the proposed modular architecture provides an effici
 
 \input{sections/1_introduction}
 \input{sections/2_literature_review}
+\input{sections/case_study}
 \input{sections/3_methodology}
 \input{sections/4_experimental_setup}
 \input{sections/5_results} 
