@@ -157,12 +157,18 @@
 % ==========================================
 \begin{abstract}
 \noindent
-Digital transformation in enterprises has accelerated the adoption of Cognitive Robotic Process Automation (RPA) capable of processing unstructured and multimodal inputs such as documents, images, and speech. However, deploying end-to-end Large Language Models (LLMs) in high-frequency enterprise workflows introduces significant challenges related to prediction accuracy, computational latency, and operational cost.
-This study proposes a modular two-stage framework for multimodal information extraction and entity resolution designed for domain-specific enterprise environments. The architecture separates signal interpretation from semantic reasoning. In the first stage, specialized perception modules—including Optical Character Recognition (OCR) and Automatic Speech Recognition (ASR)—convert multimodal inputs into textual representations. In the second stage, a unified Large Language Model performs zero-shot structured entity extraction from the transcribed content.
-To resolve extracted entities against large enterprise catalogs, the system employs a hybrid retrieval mechanism that combines dense semantic representations from Sentence-BERT with sparse lexical matching using BM25. The two retrieval signals are integrated through Reciprocal Rank Fusion (RRF) to improve robustness and recall.
-Experimental evaluation demonstrates that the proposed system achieves high extraction performance with F1-scores of 0.91 for visual inputs and 0.85 for acoustic inputs under noisy conditions. The hybrid retrieval module maintains a Recall@5 of 0.93 on a catalog containing 50,000 stock-keeping units (SKUs). In addition, the architecture achieves an estimated operational cost of \$13.50 per 1,000 processed documents while limiting the human-in-the-loop intervention rate to 12.5%.
-These results indicate that the proposed modular architecture provides an efficient and scalable approach for integrating noisy multimodal inputs into structured enterprise data pipelines.
-
+Digital transformation in enterprises has accelerated the adoption of Cognitive Robotic Process Automation (RPA) capable of processing unstructured and multimodal inputs such as documents, images, and speech.
+In this research, we conducted a case study of Rang Dong’s e-commerce platform demonstrates that integrating Multimodal AI yields significant benefits, including a 95.61\% quality score in product search, a 99.76\% accuracy in model code lookup, and the absorption of up to 416 hours of human-equivalent labor. \\
+However, deploying end-to-end Large Language Models (LLMs) in high-frequency enterprise workflows introduces significant challenges related to prediction accuracy, computational latency, and operational cost.
+Specifically, using flagship models like Gemini 2.5 Pro for large-scale operations can cost approximately \$30.00 per 1,000 documents, creating a substantial financial barrier.
+To address these limitations, this study proposes a modular two-stage framework for multimodal information extraction and entity resolution designed for domain-specific enterprise environments.
+The architecture separates signal interpretation from semantic reasoning: in the first stage, specialized perception modules—including Optical Character Recognition (OCR) and Automatic Speech Recognition (ASR)—convert noisy multimodal inputs into textual representations.
+In the second stage, a unified LLM performs zero-shot structured entity extraction from the transcribed content.
+To resolve extracted entities against large enterprise catalogs, the system employs a hybrid retrieval mechanism that combines dense semantic representations (Sentence-BERT) with sparse lexical matching (BM25), integrated through Reciprocal Rank Fusion (RRF).
+Experimental evaluation demonstrates that the proposed system achieves high performance with F1-scores of 0.91 for visual inputs and 0.85 for acoustic inputs.
+The hybrid retrieval module maintains a Recall@5 of 0.93 on a catalog containing 50,000 SKUs.
+Furthermore, the architecture achieves an estimated operational cost of \$13.50 per 1,000 documents—a 55\% reduction compared to end-to-end deployment—while reducing the total human-equivalent workload by 87.5\%. 
+These results indicate that a decoupled modular approach provides an efficient and scalable solution for integrating noisy multimodal data into structured enterprise pipelines.
 
 \medskip
 \noindent\textbf{Keywords}: Multimodal Information Extraction, Robotic Process Automation, Large Language Models, Hybrid Retrieval, Entity Resolution, Enterprise Automation.
