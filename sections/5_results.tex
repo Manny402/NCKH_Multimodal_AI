@@ -68,6 +68,9 @@ Furthermore, isolated component evaluations for Merchant and Category resolution
     \end{tabular}
 \end{table}
 
+\subsection{Field Validation Results}
+During the actual acceptance testing conducted by the client, the system processed real-world inputs characterized by distorted handwriting, inconsistent document templates, multi-accented Vietnamese speech, and the prevalence of irregular product naming. Under these challenging operational conditions, the system achieved promising outcomes with an accuracy rate of over 75\%. The research team remains on-track to further optimize the pipeline, with ongoing refinements projected to increase the accuracy to over 85\%.
+
 \subsection{Cost Efficiency Analysis}
 Economic viability was estimated based on API token consumption during inference. Calculations assume an average processing volume of 1,200 input tokens and 150 output tokens per document. As reported in Table~\ref{tab:efficiency}, the total operational cost is estimated at \$13.50 per 1,000 processed documents\footnote{Cost estimation follows standard industry practice for applied LLM systems: average empirical token counts multiplied by publicly published cloud API pricing rates (e.g., Google Cloud Vision and Gemini API tier pricing as of current evaluation). Local inference components, such as ASR, incur zero API costs.}. The majority of this cost ($\approx$\$12.00) is attributed to the LLM API during the extraction and taxonomy prediction phases. 
 

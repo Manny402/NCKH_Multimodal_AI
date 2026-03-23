@@ -21,12 +21,14 @@
 \pagestyle{fancy}
 \fancyhf{} % Clear default header and footer
 \fancyhead[C]{\thepage} % Set page number at top center
+\fancyfoot[C]{\footnotesize ©2026 Alpha Data Academy Co., Ltd. All rights reserved. Confidential and Proprietary.}
 \renewcommand{\headrulewidth}{0pt} % Remove header line
 
-% Redefine plain style so that title pages also have the same header
+% Redefine plain style so that title pages also have the same header and footer
 \fancypagestyle{plain}{
   \fancyhf{}
   \fancyhead[C]{\thepage}
+  \fancyfoot[C]{\footnotesize ©2026 Alpha Data Academy Co., Ltd. All rights reserved. Confidential and Proprietary.}
   \renewcommand{\headrulewidth}{0pt}
 }
 
@@ -152,13 +154,26 @@
 
 \maketitle
 
+\newpage
+\vspace*{\fill}
+\begin{center}
+\textbf{\Large Confidentiality Statement}
+\end{center}
+\vspace{1cm}
+\noindent This research report and all underlying data, methodologies, and findings are the exclusive intellectual property of Alpha Data Academy Co., Ltd. This document is submitted solely for the purpose of evaluation by the authorized selection committee and designated reviewers of this competition. By accepting this report, the reviewer acknowledges that this material is bound by strict confidentiality.
+
+\vspace{0.5cm}
+\noindent No part of this research may be reproduced, cited, or shared with third parties---including academic peers or commercial entities---without the express written permission of Alpha Data Academy Co., Ltd. All rights, including patent and copyright protections for the proprietary AI frameworks described herein, are fully reserved.
+\vspace*{\fill}
+\newpage
+
 % ==========================================
 % ABSTRACT
 % ==========================================
 \begin{abstract}
 \noindent
 Digital transformation in enterprises has accelerated the adoption of Cognitive Robotic Process Automation (RPA) capable of processing unstructured and multimodal inputs such as documents, images, and speech.
-In this research, we conducted a case study of Rang Dong’s e-commerce platform demonstrates that integrating Multimodal AI yields significant benefits, including a 95.61\% quality score in product search, a 99.76\% accuracy in model code lookup, and the absorption of up to 416 hours of human-equivalent labor. \\
+In this research, we conducted a case study of our client’s e-commerce platform demonstrates that integrating Multimodal AI yields significant benefits, including a 95.61\% quality score in product search, a 99.76\% accuracy in model code lookup, and the absorption of up to 416 hours of human-equivalent labor. \\
 However, deploying end-to-end Large Language Models (LLMs) in high-frequency enterprise workflows introduces significant challenges related to prediction accuracy, computational latency, and operational cost.
 Specifically, using flagship models like Gemini 2.5 Pro for large-scale operations can cost approximately \$30.00 per 1,000 documents, creating a substantial financial barrier.
 To address these limitations, this study proposes a modular two-stage framework for multimodal information extraction and entity resolution designed for domain-specific enterprise environments.
